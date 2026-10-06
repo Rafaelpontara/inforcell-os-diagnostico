@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FIXBOT.AI — Diagnóstico guiado por IA para assistências técnicas</title>
+  <meta name="description" content="Plataforma que une Ordens de Serviço a um assistente de IA que conduz o técnico do sintoma à causa com um roteiro de testes. Projeto Inforcell – UNIBALSAS." />
+  <meta name="theme-color" content="#070b10" />
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/styles.css" />
+  <script>document.documentElement.classList.add("js");</script>
+  <script src="dist/main.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
+
+  <!-- ===================== CABEÇALHO ===================== -->
+  <header class="header" id="topo">
+    <div class="container header__inner">
+      <a href="#topo" class="logo" aria-label="FIXBOT.AI – página inicial">
+        <span class="logo__icon" aria-hidden="true"></span>
+        <span class="logo__text">FIXBOT<span class="accent">.AI</span></span>
+      </a>
+
+      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="menu" aria-label="Abrir menu">
+        <span></span><span></span><span></span>
+      </button>
+
+      <nav class="nav" id="menu" aria-label="Navegação principal">
+        <ul class="nav__list">
+          <li><a class="nav__link" href="#plataforma">Plataforma</a></li>
+          <li><a class="nav__link" href="#como-funciona">Como funciona</a></li>
+          <li><a class="nav__link" href="#recursos">Recursos</a></li>
+          <li><a class="nav__link" href="#planos">Planos</a></li>
+          <li><a class="nav__link" href="#faq">FAQ</a></li>
+        </ul>
+        <div class="nav__actions">
+          <span class="status-pill" title="A integração com a IA será feita na Sprint 3">
+            <span class="status-pill__dot" aria-hidden="true"></span>AI ENGINE: EM BREVE
+          </span>
+          <a class="btn btn--outline btn--sm" href="#acesso">Entrar</a>
+        </div>
+      </nav>
+    </div>
+  </header>
+
+  <main id="conteudo">
+    <!-- ===================== HERO ===================== -->
+    <section class="hero" aria-labelledby="hero-titulo">
+      <div class="container hero__grid">
+        <div class="hero__text reveal">
+          <p class="eyebrow">// assistente de diagnóstico inteligente</p>
+          <h1 id="hero-titulo" class="hero__title">
+            Do sintoma à causa com um roteiro de testes guiado por <span class="accent">IA</span>.
+          </h1>
+          <p class="hero__lead">
+            O FIXBOT.AI une o controle de <strong>Ordens de Serviço</strong> a um assistente que sugere as causas
+            prováveis, indica o próximo teste com ponto de medição e valor esperado, e registra cada etapa.
+            A IA propõe — o técnico decide.
+          </p>
+          <div class="hero__cta">
+            <a class="btn btn--primary" href="#acesso">Iniciar diagnóstico <span aria-hidden="true">→</span></a>
+            <a class="btn btn--outline" href="#como-funciona">Ver como funciona</a>
+          </div>
+          <p class="hero__note">
+            <span class="icon-shield" aria-hidden="true"></span>
+            <span>Em desenvolvimento para a <strong>Inforcell</strong> · Balsas/MA — teste piloto previsto para dezembro/2026.</span>
+          </p>
+        </div>
+
+        <!-- Janela de console ilustrativa -->
+        <div class="console reveal" role="img" aria-label="Ilustração de uma sessão de diagnóstico: iPhone 11 que não liga, com as causas prováveis e a próxima medição sugerida.">
+          <div class="console__bar">
+            <span class="dots" aria-hidden="true"><i></i><i></i><i></i></span>
+            <span class="console__title">fixbot://os-0142/diagnostico</span>
+            <span class="badge badge--accent">ETAPA 2/10</span>
+          </div>
+          <div class="console__body">
+            <div class="console__row">
+              <span class="label">Equipamento</span><span>iPhone 11</span>
+            </div>
+            <div class="console__row">
+              <span class="label">Sintoma</span><span>Aparelho não liga</span>
+            </div>
+            <div class="signal" aria-hidden="true">
+              <svg viewBox="0 0 300 60" preserveAspectRatio="none">
+                <polyline class="signal__line" points="0,30 40,30 55,10 70,50 85,30 130,30 145,14 160,46 175,30 220,30 235,8 250,52 265,30 300,30" />
+              </svg>
+            </div>
+            <p class="console__heading">[CAUSAS_PROVÁVEIS]</p>
+            <ul class="causes">
+              <li><span>Curto na linha de alimentação</span><span class="bar"><i style="--w:68%"></i></span><b>alta</b></li>
+              <li><span>Bateria degradada</span><span class="bar"><i style="--w:42%"></i></span><b>média</b></li>
+              <li><span>Falha no conector de carga</span><span class="bar"><i style="--w:20%"></i></span><b>baixa</b></li>
+            </ul>
+            <p class="console__heading">[PRÓXIMA_ETAPA]</p>
+            <p class="console__step">Medir consumo na fonte de bancada ao pressionar <em>Power</em>. Esperado: pico e estabilização.</p>
+            <p class="console__alert"><span aria-hidden="true">⚠</span> Desconecte a bateria antes de medir resistência.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Indicadores do MVP -->
+      <div class="container">
+        <ul class="stats reveal" aria-label="Metas e números do MVP">
+          <li class="stat">
+            <span class="stat__value" data-count="3">3</span>
+            <span class="stat__label">sintomas-piloto em smartphones</span>
+          </li>
+          <li class="stat">
+            <span class="stat__value"><span data-count="60">60</span>%</span>
+            <span class="stat__label">meta: causa real no top 3 da IA</span>
+          </li>
+          <li class="stat">
+            <span class="stat__value">≤<span data-count="10">10</span></span>
+            <span class="stat__label">etapas por sessão de diagnóstico</span>
+          </li>
+          <li class="stat">
+            <span class="stat__value"><span data-count="100">100</span>%</span>
+            <span class="stat__label">das etapas registradas na OS</span>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ===================== PLATAFORMA ===================== -->
+    <section class="section" id="plataforma" aria-labelledby="plataforma-titulo">
+      <div class="container">
+        <header class="section__header reveal">
+          <p class="eyebrow">// uma plataforma, toda a assistência</p>
+          <h2 id="plataforma-titulo" class="section__title">Do balcão à bancada, tudo em um só lugar</h2>
+          <p class="section__lead">Hoje as OS se perdem no WhatsApp e o diagnóstico depende da experiência de cada técnico. O FIXBOT.AI organiza as duas pontas do processo.</p>
+        </header>
+
+        <div class="cards cards--2">
+          <article class="card reveal">
+            <div class="card__head">
+              <span class="card__icon" aria-hidden="true">▤</span>
+              <span class="tag">ATENDENTE</span>
+            </div>
+            <h3 class="card__title">Ordens de Serviço</h3>
+            <p class="card__text">Cadastro de clientes e equipamentos, abertura da OS com o sintoma relatado e atribuição ao técnico.</p>
+            <ul class="checklist">
+              <li>Status com histórico de mudanças</li>
+              <li>Espera de peças e devolução sem reparo</li>
+              <li>Fim das informações dispersas no WhatsApp</li>
+            </ul>
+          </article>
+
+          <article class="card reveal">
+            <div class="card__head">
+              <span class="card__icon" aria-hidden="true">◎</span>
+              <span class="tag">TÉCNICO</span>
+            </div>
+            <h3 class="card__title">Diagnóstico guiado</h3>
+            <p class="card__text">A IA interpreta o sintoma, lista as causas prováveis e indica um teste por vez, reinterpretando a cada medição.</p>
+            <ul class="checklist">
+              <li>Procedimento, ponto de medição e valor esperado</li>
+              <li>Alertas de segurança obrigatórios</li>
+              <li>Diagnóstico só conclui com sua confirmação</li>
+            </ul>
+          </article>
+
+          <article class="card reveal">
+            <div class="card__head">
+              <span class="card__icon" aria-hidden="true">⟲</span>
+              <span class="tag">HISTÓRICO</span>
+            </div>
+            <h3 class="card__title">Casos semelhantes</h3>
+            <p class="card__text">Cada diagnóstico concluído vira histórico consultável do equipamento e referência para os próximos reparos.</p>
+            <ul class="checklist">
+              <li>Histórico completo por aparelho</li>
+              <li>Raciocínio de cada caso reconstruível</li>
+              <li>Experiência da equipe que não se perde</li>
+            </ul>
+          </article>
+
+          <article class="card reveal">
+            <div class="card__head">
+              <span class="card__icon" aria-hidden="true">❏</span>
+              <span class="tag">CONHECIMENTO</span>
+            </div>
+            <h3 class="card__title">Base de conhecimento</h3>
+            <p class="card__text">Procedimentos técnicos revisados pelo técnico alimentam a IA (RAG), reduzindo respostas genéricas ou inventadas.</p>
+            <ul class="checklist">
+              <li>Fontes citadas em cada resposta</li>
+              <li>Procedimentos cadastrados pelo técnico</li>
+              <li>Cresce a cada OS concluída</li>
+            </ul>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== COMO FUNCIONA ===================== -->
+    <section class="section section--alt" id="como-funciona" aria-labelledby="como-titulo">
+      <div class="container">
+        <header class="section__header reveal">
+          <p class="eyebrow">// fluxo do diagnóstico</p>
+          <h2 id="como-titulo" class="section__title">Como funciona o diagnóstico guiado?</h2>
+        </header>
+
+        <ol class="steps">
+          <li class="step reveal">
+            <span class="step__num">01</span>
+            <span class="step__tag">ATENDIMENTO</span>
+            <h3 class="step__title">Abra a OS</h3>
+            <p>Registre o cliente, o equipamento e o sintoma relatado no balcão.</p>
+          </li>
+          <li class="step reveal">
+            <span class="step__num">02</span>
+            <span class="step__tag">ANÁLISE IA</span>
+            <h3 class="step__title">Receba as hipóteses</h3>
+            <p>A IA lista até quatro causas prováveis, da mais para a menos provável.</p>
+          </li>
+          <li class="step reveal">
+            <span class="step__num">03</span>
+            <span class="step__tag">BANCADA</span>
+            <h3 class="step__title">Siga o roteiro</h3>
+            <p>Faça o teste indicado, informe o valor medido e veja a reinterpretação.</p>
+          </li>
+          <li class="step reveal">
+            <span class="step__num">04</span>
+            <span class="step__tag">CONCLUSÃO</span>
+            <h3 class="step__title">Confirme e registre</h3>
+            <p>Você confirma a causa e o reparo; tudo fica salvo no histórico da OS.</p>
+          </li>
+        </ol>
+
+        <div class="pilot reveal">
+          <p class="pilot__title">Sintomas-piloto do MVP</p>
+          <ul class="pilot__list">
+            <li>Aparelho não liga</li>
+            <li>Aparelho não carrega</li>
+            <li>Liga, mas fica sem imagem</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== RECURSOS ===================== -->
+    <section class="section" id="recursos" aria-labelledby="recursos-titulo">
+      <div class="container">
+        <header class="section__header reveal">
+          <p class="eyebrow">// pensado para a rotina da assistência</p>
+          <h2 id="recursos-titulo" class="section__title">Recursos construídos com quem está na bancada</h2>
+        </header>
+
+        <div class="features">
+          <article class="feature reveal">
+            <span class="feature__icon" aria-hidden="true">⚑</span>
+            <h3>A IA propõe, o técnico decide</h3>
+            <p>Nenhum diagnóstico é concluído pela IA sozinha: a causa final é sempre confirmada por você.</p>
+          </article>
+          <article class="feature reveal">
+            <span class="feature__icon" aria-hidden="true">⚠</span>
+            <h3>Segurança em primeiro lugar</h3>
+            <p>Alertas obrigatórios quando o procedimento envolve baterias de lítio, alta tensão ou risco de curto.</p>
+          </article>
+          <article class="feature reveal">
+            <span class="feature__icon" aria-hidden="true">⌘</span>
+            <h3>Respostas estruturadas</h3>
+            <p>Causas, próxima etapa e fontes em formato padronizado — nada de texto solto difícil de seguir.</p>
+          </article>
+          <article class="feature reveal">
+            <span class="feature__icon" aria-hidden="true">⛨</span>
+            <h3>Perfis e privacidade (LGPD)</h3>
+            <p>Acesso por perfil (atendente, técnico, administrador). A IA recebe apenas dados técnicos, nunca nome ou telefone.</p>
+          </article>
+          <article class="feature reveal">
+            <span class="feature__icon" aria-hidden="true">▣</span>
+            <h3>Responsivo no balcão e na bancada</h3>
+            <p>Interface web que funciona no computador do atendimento e no celular ao lado do multímetro.</p>
+          </article>
+          <article class="feature reveal">
+            <span class="feature__icon" aria-hidden="true">?</span>
+            <h3>Honesta quando não sabe</h3>
+            <p>Sem informação suficiente, a IA responde “não sei” e indica o que falta ou sugere consultar um técnico experiente.</p>
+          </article>
+        </div>
+
+        <!-- Terminal animado -->
+        <div class="live reveal" aria-labelledby="live-titulo">
+          <p class="eyebrow eyebrow--center">// demonstração</p>
+          <h3 id="live-titulo" class="live__title">Acompanhe um diagnóstico em tempo real</h3>
+          <div class="terminal">
+            <div class="console__bar">
+              <span class="dots" aria-hidden="true"><i></i><i></i><i></i></span>
+              <span class="console__title">sessao_diagnostico.log</span>
+              <button class="terminal__replay" type="button" aria-label="Reiniciar demonstração">↻ repetir</button>
+            </div>
+            <pre class="terminal__body" id="terminal" aria-live="off"><code></code></pre>
+            <noscript><pre class="terminal__body">&gt; OS #0142 · Moto G52 · "não carrega"
+&gt; causa provável: conector de carga oxidado (alta)
+&gt; próxima etapa: medir tensão VBUS no conector — esperado ≈ 5 V</pre></noscript>
+          </div>
+          <p class="live__caption">Simulação ilustrativa. A integração com a IA (API da Anthropic) será implementada na Sprint 3.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== VALIDAÇÃO ===================== -->
+    <section class="section section--alt" id="validacao" aria-labelledby="validacao-titulo">
+      <div class="container">
+        <header class="section__header reveal">
+          <p class="eyebrow">// validado com o público-alvo</p>
+          <h2 id="validacao-titulo" class="section__title">Construído e testado com técnicos de verdade</h2>
+          <p class="section__lead">A proposta é validada em quatro estratégias complementares, com critérios de sucesso definidos antes da coleta.</p>
+        </header>
+        <div class="cards cards--4">
+          <article class="mini reveal">
+            <span class="mini__code">E1</span>
+            <h3>Entrevista</h3>
+            <p>Técnico e atendente da Inforcell relatam a rotina real de diagnóstico e OS.</p>
+          </article>
+          <article class="mini reveal">
+            <span class="mini__code">E2</span>
+            <h3>Questionário</h3>
+            <p>Técnicos de Balsas e região medem frequência do problema e interesse.</p>
+          </article>
+          <article class="mini reveal">
+            <span class="mini__code">E3</span>
+            <h3>Teste de conceito</h3>
+            <p>Casos reais já resolvidos comparam a causa da IA com a causa confirmada.</p>
+          </article>
+          <article class="mini reveal">
+            <span class="mini__code">E4</span>
+            <h3>Usabilidade</h3>
+            <p>Tarefas no protótipo e questionário SUS, com meta de nota ≥ 68.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== PLANOS ===================== -->
+    <section class="section" id="planos" aria-labelledby="planos-titulo">
+      <div class="container">
+        <header class="section__header reveal">
+          <p class="eyebrow">// planos</p>
+          <h2 id="planos-titulo" class="section__title">Escolha como começar</h2>
+          <p class="section__lead">Valores de assinatura ainda em pesquisa com as assistências da região.</p>
+        </header>
+
+        <div class="plans">
+          <article class="plan reveal">
+            <h3 class="plan__name">Piloto</h3>
+            <p class="plan__desc">Para a assistência parceira durante o teste do MVP.</p>
+            <p class="plan__price">Gratuito</p>
+            <ul class="checklist">
+              <li>Ordens de Serviço ilimitadas</li>
+              <li>Diagnóstico dos sintomas-piloto</li>
+              <li>Acompanhamento da equipe</li>
+            </ul>
+            <a class="btn btn--outline btn--block" href="#acesso">Participar do piloto</a>
+          </article>
+
+          <article class="plan plan--featured reveal">
+            <span class="plan__badge">MAIS INDICADO</span>
+            <h3 class="plan__name">Assistência</h3>
+            <p class="plan__desc">Para técnicos e atendentes no dia a dia.</p>
+            <p class="plan__price">Em breve<small> / mês</small></p>
+            <ul class="checklist">
+              <li>Tudo do Piloto</li>
+              <li>Histórico e casos semelhantes</li>
+              <li>Base de conhecimento própria</li>
+              <li>Perfis de acesso por usuário</li>
+            </ul>
+            <a class="btn btn--primary btn--block" href="#acesso">Quero ser avisado</a>
+          </article>
+
+          <article class="plan reveal">
+            <h3 class="plan__name">Rede</h3>
+            <p class="plan__desc">Para várias lojas ou cursos técnicos.</p>
+            <p class="plan__price">Sob consulta</p>
+            <ul class="checklist">
+              <li>Tudo do Assistência</li>
+              <li>Painel com indicadores</li>
+              <li>Novos equipamentos e sintomas</li>
+            </ul>
+            <a class="btn btn--outline btn--block" href="#acesso">Falar com a equipe</a>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== FAQ ===================== -->
+    <section class="section section--alt" id="faq" aria-labelledby="faq-titulo">
+      <div class="container">
+        <header class="section__header reveal">
+          <p class="eyebrow">// perguntas frequentes</p>
+          <h2 id="faq-titulo" class="section__title">Dúvidas sobre o diagnóstico guiado</h2>
+        </header>
+        <div class="faq">
+          <details class="faq__item reveal">
+            <summary>A IA substitui o técnico?</summary>
+            <p>Não. Ela sugere causas e próximos testes, mas o diagnóstico só é concluído com a confirmação do técnico, que continua no controle de cada decisão.</p>
+          </details>
+          <details class="faq__item reveal">
+            <summary>Quais aparelhos e defeitos são atendidos?</summary>
+            <p>O MVP cobre smartphones em três sintomas-piloto: não liga, não carrega e liga sem imagem. Computadores e novos sintomas entram nas próximas versões.</p>
+          </details>
+          <details class="faq__item reveal">
+            <summary>E se a IA errar ou não souber?</summary>
+            <p>As respostas se baseiam em procedimentos revisados e citam as fontes. Quando falta informação, a IA responde “não sei” e diz o que precisa para continuar.</p>
+          </details>
+          <details class="faq__item reveal">
+            <summary>Os dados dos meus clientes ficam protegidos?</summary>
+            <p>Sim. Senhas com hash, acesso por perfil e HTTPS. Para a IA vão apenas dados técnicos do equipamento, nunca nome ou telefone, conforme a LGPD.</p>
+          </details>
+          <details class="faq__item reveal">
+            <summary>Preciso instalar alguma coisa?</summary>
+            <p>Não. O FIXBOT.AI é uma aplicação web responsiva: basta o navegador no computador do balcão ou no celular da bancada.</p>
+          </details>
+          <details class="faq__item reveal">
+            <summary>Quando estará disponível?</summary>
+            <p>O desenvolvimento segue em sprints até dezembro/2026, com teste piloto na Inforcell entre 30/11 e 06/12.</p>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== CTA ===================== -->
+    <section class="section section--cta" id="acesso" aria-labelledby="cta-titulo">
+      <div class="container">
+        <div class="cta reveal">
+          <div>
+            <h2 id="cta-titulo" class="cta__title">Transforme sua bancada em um laboratório técnico</h2>
+            <p class="cta__text">O acesso à plataforma será liberado nas próximas sprints. Acompanhe o projeto no GitHub.</p>
+          </div>
+          <a class="btn btn--primary" href="https://github.com/Rafaelpontara/inforcell-os-diagnostico" target="_blank" rel="noopener noreferrer">
+            Acompanhar o projeto <span aria-hidden="true">→</span>
+          </a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ===================== RODAPÉ ===================== -->
+  <footer class="footer">
+    <div class="container footer__grid">
+      <div class="footer__brand">
+        <a href="#topo" class="logo" aria-label="Voltar ao topo">
+          <span class="logo__icon" aria-hidden="true"></span>
+          <span class="logo__text">FIXBOT<span class="accent">.AI</span></span>
+        </a>
+        <p>Assistente de diagnóstico inteligente desenvolvido para a Inforcell — assistência técnica de celulares e computadores em Balsas/MA.</p>
+      </div>
+      <nav aria-label="Produto">
+        <h3 class="footer__title">Produto</h3>
+        <ul>
+          <li><a href="#plataforma">Plataforma</a></li>
+          <li><a href="#como-funciona">Como funciona</a></li>
+          <li><a href="#recursos">Recursos</a></li>
+          <li><a href="#planos">Planos</a></li>
+        </ul>
+      </nav>
+      <nav aria-label="Projeto">
+        <h3 class="footer__title">Projeto</h3>
+        <ul>
+          <li><a href="https://github.com/Rafaelpontara/inforcell-os-diagnostico" target="_blank" rel="noopener noreferrer">Repositório</a></li>
+          <li><a href="#validacao">Validação</a></li>
+          <li><a href="#faq">FAQ</a></li>
+        </ul>
+      </nav>
+      <div>
+        <h3 class="footer__title">Equipe</h3>
+        <ul>
+          <li>Rafael R Pontara</li>
+          <li>Matheus de Brito Araujo</li>
+          <li>Pedro Paulo T. Araujo</li>
+        </ul>
+      </div>
+    </div>
+    <div class="container footer__bottom">
+      <p>© <span id="ano">2026</span> FIXBOT.AI · Projeto acadêmico – Sistemas de Informação, UNIBALSAS.</p>
+      <a href="#topo" class="footer__top">Voltar ao topo ↑</a>
+    </div>
+  </footer>
+</body>
+</html>
