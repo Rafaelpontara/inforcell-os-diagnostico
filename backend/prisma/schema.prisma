@@ -1,0 +1,254 @@
+// Modelo de dados da Plataforma Inforcell OS
+// Banco: MySQL 8 (RNF / Seção 16 do Documento Técnico)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------- Enums ----------
+
+enum Perfil {
+  ADMIN
+  ATENDENTE
+  TECNICO
+}
+
+enum TipoEquipamento {
+  CELULAR
+  TABLET
+  NOTEBOOK
+  DESKTOP
+  OUTRO
+}
+
+enum StatusOS {
+  RECEBIDO
+  EM_DIAGNOSTICO
+  AGUARDANDO_APROVACAO
+  EM_REPARO
+  EM_TESTES
+  FINALIZADO
+  ENTREGUE
+  CANCELADO
+}
+
+enum StatusSessao {
+  ATIVA
+  CONCLUIDA
+}
+
+enum AutorMensagem {
+  TECNICO
+  IA
+}
+
+enum AvaliacaoMedicao {
+  DENTRO_DO_ESPERADO
+  ABAIXO_DO_ESPERADO
+  ACIMA_DO_ESPERADO
+  INDEFINIDO
+}
+
+// ---------- Usuários (RF01, RF02) ----------
+
+model Usuario {
+  id        Int      @id @default(autoincrement())
+  nome      String   @db.VarChar(120)
+  email     String   @unique @db.VarChar(160)
+  senhaHash String   @db.VarChar(100)
+  perfil    Perfil
+  ativo     Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  osAbertas    OrdemServico[]      @relation("AtendenteOS")
+  osAtribuidas OrdemServico[]      @relation("TecnicoOS")
+  historicos   HistoricoStatus[]
+  sessoes      SessaoDiagnostico[]
+  reparos      Reparo[]
+
+  @@map("usuarios")
+}
+
+// ---------- Clientes (RF03) ----------
+
+model Cliente {
+  id        Int      @id @default(autoincrement())
+  nome      String   @db.VarChar(120)
+  cpf       String?  @unique @db.VarChar(14)
+  telefone  String   @db.VarChar(20)
+  email     String?  @db.VarChar(160)
+  endereco  String?  @db.VarChar(255)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  equipamentos Equipamento[]
+  ordens       OrdemServico[]
+
+  @@index([telefone])
+  @@map("clientes")
+}
+
+// ---------- Equipamentos (RF04, RF19) ----------
+
+model Equipamento {
+  id          Int             @id @default(autoincrement())
+  clienteId   Int
+  tipo        TipoEquipamento
+  marca       String          @db.VarChar(60)
+  modelo      String          @db.VarChar(80)
+  numeroSerie String?         @db.VarChar(80)
+  imei        String?         @db.VarChar(20)
+  cor         String?         @db.VarChar(40)
+  observacoes String?         @db.Text
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  cliente Cliente        @relation(fields: [clienteId], references: [id])
+  ordens  OrdemServico[]
+
+  @@index([imei])
+  @@index([numeroSerie])
+  @@map("equipamentos")
+}
+
+// ---------- Ordens de Serviço (RF05–RF08, RF20, RF21) ----------
+
+model OrdemServico {
+  id              Int       @id @default(autoincrement())
+  clienteId       Int
+  equipamentoId   Int
+  atendenteId     Int
+  tecnicoId       Int?
+  defeitoRelatado String    @db.Text
+  acessorios      String?   @db.VarChar(255)
+  status          StatusOS  @default(RECEBIDO)
+  valorOrcamento  Decimal?  @db.Decimal(10, 2)
+  previsaoEntrega DateTime?
+  observacoes     String?   @db.Text
+  finalizadaEm    DateTime?
+  entregueEm      DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  cliente     Cliente             @relation(fields: [clienteId], references: [id])
+  equipamento Equipamento         @relation(fields: [equipamentoId], references: [id])
+  atendente   Usuario             @relation("AtendenteOS", fields: [atendenteId], references: [id])
+  tecnico     Usuario?            @relation("TecnicoOS", fields: [tecnicoId], references: [id])
+  historico   HistoricoStatus[]
+  sessoes     SessaoDiagnostico[]
+  medicoes    Medicao[]
+  reparos     Reparo[]
+
+  @@index([status])
+  @@index([tecnicoId])
+  @@map("ordens_servico")
+}
+
+model HistoricoStatus {
+  id         Int       @id @default(autoincrement())
+  osId       Int
+  usuarioId  Int
+  de         StatusOS?
+  para       StatusOS
+  observacao String?   @db.VarChar(255)
+  createdAt  DateTime  @default(now())
+
+  os      OrdemServico @relation(fields: [osId], references: [id], onDelete: Cascade)
+  usuario Usuario      @relation(fields: [usuarioId], references: [id])
+
+  @@map("historico_status")
+}
+
+// ---------- Diagnóstico assistido por IA (RF09–RF17) ----------
+
+model SessaoDiagnostico {
+  id               Int          @id @default(autoincrement())
+  osId             Int
+  tecnicoId        Int
+  sintoma          String       @db.Text
+  status           StatusSessao @default(ATIVA)
+  causasPossiveis  Json?
+  diagnosticoFinal String?      @db.Text
+  createdAt        DateTime     @default(now())
+  concluidaEm      DateTime?
+
+  os        OrdemServico          @relation(fields: [osId], references: [id], onDelete: Cascade)
+  tecnico   Usuario               @relation(fields: [tecnicoId], references: [id])
+  mensagens MensagemDiagnostico[]
+  medicoes  Medicao[]
+
+  @@map("sessoes_diagnostico")
+}
+
+model MensagemDiagnostico {
+  id                Int           @id @default(autoincrement())
+  sessaoId          Int
+  autor             AutorMensagem
+  conteudo          String        @db.Text
+  dadosEstruturados Json?
+  createdAt         DateTime      @default(now())
+
+  sessao SessaoDiagnostico @relation(fields: [sessaoId], references: [id], onDelete: Cascade)
+
+  @@map("mensagens_diagnostico")
+}
+
+model Medicao {
+  id                Int              @id @default(autoincrement())
+  osId              Int
+  sessaoId          Int?
+  pontoMedicao      String           @db.VarChar(120)
+  grandeza          String           @db.VarChar(40)
+  valor             Decimal          @db.Decimal(12, 4)
+  unidade           String           @db.VarChar(10)
+  resultadoEsperado String?          @db.VarChar(120)
+  avaliacao         AvaliacaoMedicao @default(INDEFINIDO)
+  observacao        String?          @db.VarChar(255)
+  createdAt         DateTime         @default(now())
+
+  os     OrdemServico       @relation(fields: [osId], references: [id], onDelete: Cascade)
+  sessao SessaoDiagnostico? @relation(fields: [sessaoId], references: [id], onDelete: SetNull)
+
+  @@map("medicoes")
+}
+
+// ---------- Reparos (RF18) ----------
+
+model Reparo {
+  id              Int      @id @default(autoincrement())
+  osId            Int
+  tecnicoId       Int
+  descricao       String   @db.Text
+  pecasUtilizadas String?  @db.Text
+  valorFinal      Decimal? @db.Decimal(10, 2)
+  createdAt       DateTime @default(now())
+
+  os      OrdemServico @relation(fields: [osId], references: [id], onDelete: Cascade)
+  tecnico Usuario      @relation(fields: [tecnicoId], references: [id])
+
+  @@map("reparos")
+}
+
+// ---------- Base de conhecimento técnico (Seção 17) ----------
+
+model ArtigoConhecimento {
+  id              Int              @id @default(autoincrement())
+  titulo          String           @db.VarChar(160)
+  tipoEquipamento TipoEquipamento?
+  marca           String?          @db.VarChar(60)
+  modelo          String?          @db.VarChar(80)
+  sintoma         String           @db.VarChar(255)
+  conteudo        String           @db.Text
+  tags            String?          @db.VarChar(255)
+  origemOsId      Int?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  @@map("base_conhecimento")
+}
