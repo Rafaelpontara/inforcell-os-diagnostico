@@ -5,7 +5,6 @@ Plataforma inteligente para gestão de Ordens de Serviço e diagnóstico assisti
 ## Equipe
 
 - Matheus de Brito Araujo
-- Pedro Junior Ubirajara
 - Pedro Paulo T. Araujo
 - Rafael Pontara
 
