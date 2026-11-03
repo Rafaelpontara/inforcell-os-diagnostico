@@ -5,7 +5,6 @@ Plataforma inteligente para gestão de Ordens de Serviço e diagnóstico assisti
 ## Equipe
 
 - Matheus de Brito Araujo
-- Pedro Junior Ubirajara
 - Pedro Paulo T. Araujo
 - Rafael Pontara
 
@@ -20,7 +19,8 @@ A plataforma reúne dois grandes grupos de funcionalidades:
 
 - Front-end: HTML, CSS, JavaScript, TypeScript
 - Banco de dados: MySQL
-- Backend e API de IA: a definir
+- Back-end: Node.js, Express 5, TypeScript e Prisma ORM (API REST, autenticação JWT + bcrypt)
+- API de IA: Anthropic (modelos Claude), acessada somente pelo servidor
 - Prototipação: Figma
 - Versionamento: GitHub
 
@@ -28,6 +28,13 @@ A plataforma reúne dois grandes grupos de funcionalidades:
 
 Protótipo de alta fidelidade no Figma: <https://www.figma.com/design/n6lJH8wOyIVzayCsOiWnGk/Projeto-de-I.A-de-Assistencia-para-equipamentos-eletronicos>
 
+## Estrutura do repositório
+
+- [`frontend/`](frontend/) — página inicial e interface web
+- [`backend/`](backend/) — API REST, regras de negócio, banco de dados e integração com a IA
+
+Para instalar e executar a API, os scripts do banco e a documentação dos endpoints, consulte o [README do back-end](backend/README.md).
+
 ## Status
 
-Projeto em fase inicial (levantamento de requisitos, prototipação e definição de arquitetura). Consulte a documentação técnica completa (PDF) entregue junto com este repositório.
+Back-end implementado (API REST, persistência em MySQL, autenticação e diagnóstico guiado por IA). Consulte a documentação técnica completa (PDF) entregue junto com este repositório.

@@ -1,0 +1,75 @@
+### Exemplos de requisições — use com a extensão REST Client do VS Code
+@base = http://localhost:3333/api
+
+### Login (copie o token retornado para a variável abaixo)
+# @name login
+POST {{base}}/auth/login
+Content-Type: application/json
+
+{ "email": "atendente@inforcell.local", "senha": "inforcell123" }
+
+###
+@token = {{login.response.body.token}}
+
+### Cadastrar cliente
+POST {{base}}/clientes
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "nome": "Ana Costa", "telefone": "(99) 98111-2222" }
+
+### Cadastrar equipamento
+POST {{base}}/equipamentos
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "clienteId": 1, "tipo": "CELULAR", "marca": "Samsung", "modelo": "Galaxy A54", "imei": "356789012345678" }
+
+### Abrir OS
+POST {{base}}/ordens
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "clienteId": 1, "equipamentoId": 1, "defeitoRelatado": "Não liga", "acessorios": "Capinha" }
+
+### Listar OS em aberto
+GET {{base}}/ordens?status=RECEBIDO,EM_DIAGNOSTICO
+Authorization: Bearer {{token}}
+
+### ----- Técnico -----
+# @name loginTec
+POST {{base}}/auth/login
+Content-Type: application/json
+
+{ "email": "tecnico@inforcell.local", "senha": "inforcell123" }
+
+###
+@tec = {{loginTec.response.body.token}}
+
+### Iniciar diagnóstico com IA
+POST {{base}}/ordens/1/diagnosticos
+Authorization: Bearer {{tec}}
+Content-Type: application/json
+
+{ "sintoma": "Sem imagem, sem vibração, não aparece no computador" }
+
+### Informar resultado de um teste
+POST {{base}}/diagnosticos/1/mensagens
+Authorization: Bearer {{tec}}
+Content-Type: application/json
+
+{
+  "texto": "Na fonte de bancada o consumo fica em 0 mA ao pressionar Power",
+  "medicao": { "pontoMedicao": "Conector da bateria", "grandeza": "corrente", "valor": 0, "unidade": "mA", "resultadoEsperado": "50–300 mA" }
+}
+
+### Concluir diagnóstico
+POST {{base}}/diagnosticos/1/concluir
+Authorization: Bearer {{tec}}
+Content-Type: application/json
+
+{ "diagnosticoFinal": "Flex do botão Power rompido", "salvarNaBase": true }
+
+### Painel
+GET {{base}}/dashboard
+Authorization: Bearer {{tec}}
