@@ -1,5 +1,13 @@
 # Histórico de versões — Front-end FIXBOT.AI
 
+## [0.3.0] — 04/11/2026
+### Adicionado
+- Cadastro público de assistências: cada empresa cria a própria conta e vê apenas os próprios dados.
+- Telas de painel e de equipe.
+
+### Alterado
+- O número da OS agora é próprio de cada empresa. Depois do login, a primeira tela é o painel.
+
 ## [0.2.0] — 04/11/2026
 ### Adicionado
 - Telas internas em `app.html`, integradas à API: login com JWT, clientes e equipamentos, Ordens de Serviço (lista, abertura, técnico, orçamento, status, reparos, histórico e comprovante) e assistente de diagnóstico com IA.

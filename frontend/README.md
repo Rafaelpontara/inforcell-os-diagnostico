@@ -3,7 +3,7 @@
 Interface web do assistente de diagnóstico inteligente da **Inforcell** (UNIBALSAS – Sistemas de Informação).
 Tecnologias definidas no Documento Técnico (Quadro 11): **HTML, CSS e TypeScript**, sem frameworks.
 
-> Estado atual: **página inicial** e **telas internas** (login, clientes e equipamentos, Ordens de Serviço e assistente de diagnóstico) integradas à API do back-end Inforcell OS.
+> Estado atual: **página inicial** e **telas internas** (cadastro de assistências, login, painel, equipe, clientes e equipamentos, Ordens de Serviço e assistente de diagnóstico) integradas à API do back-end Inforcell OS.
 
 ## Estrutura
 
@@ -47,7 +47,10 @@ Precisam da API do back-end em execução (veja o README do back-end). Com a API
 
 | Tela | O que faz | Perfis |
 |---|---|---|
+| Cadastrar assistência | Cria a empresa e o administrador dela. Cada empresa só vê os próprios dados | Público |
 | Login | Autenticação com JWT. O token fica no `sessionStorage` e some ao fechar a aba | Todos |
+| Painel | Indicadores e OS por status da empresa | Todos |
+| Equipe | Adiciona, desativa e reativa atendentes, técnicos e administradores | ADMIN |
 | Clientes | Busca, cadastro e edição de clientes e de seus equipamentos | Cadastro: ADMIN e ATENDENTE |
 | Ordens de Serviço | Lista com filtros, abertura de OS, técnico, orçamento, status, reparos, histórico e comprovante | Abertura: ADMIN e ATENDENTE |
 | Assistente de diagnóstico | Conversa guiada com a IA, medições e conclusão do diagnóstico | ADMIN e TECNICO |

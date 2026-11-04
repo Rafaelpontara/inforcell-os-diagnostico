@@ -87,7 +87,7 @@ export async function telaOrdens(el: HTMLElement, { consulta }: ContextoTela): P
                 h(
                   "tr",
                   {},
-                  h("td", {}, h("a", { href: `#/ordens/${o.id}` }, numeroOS(o.id))),
+                  h("td", {}, h("a", { href: `#/ordens/${o.id}` }, numeroOS(o.numero))),
                   h("td", {}, o.cliente.nome),
                   h("td", {}, `${o.equipamento.marca} ${o.equipamento.modelo}`),
                   h("td", {}, o.tecnico?.nome ?? "Sem técnico"),
@@ -196,6 +196,7 @@ export async function telaNovaOrdem(el: HTMLElement, { consulta }: ContextoTela)
     campo({
       rotulo: "Técnico",
       nome: "tecnicoId",
+      ajuda: tecnicos.length === 0 ? "Nenhum técnico cadastrado. O administrador pode adicionar na tela Equipe." : undefined,
       opcoes: [{ valor: "", rotulo: "Definir depois" }, ...tecnicos.map((t) => ({ valor: String(t.id), rotulo: t.nome }))],
     }),
     campo({ rotulo: "Previsão de entrega", nome: "previsaoEntrega", tipo: "date" }),
@@ -213,7 +214,7 @@ export async function telaNovaOrdem(el: HTMLElement, { consulta }: ContextoTela)
         tecnicoId: d.tecnicoId ? Number(d.tecnicoId) : null,
         previsaoEntrega: dataParaIso(d.previsaoEntrega),
       });
-      definirAviso({ tipo: "ok", texto: `${numeroOS(os.id)} aberta com sucesso.` });
+      definirAviso({ tipo: "ok", texto: `${numeroOS(os.numero)} aberta com sucesso.` });
       irPara(`#/ordens/${os.id}`);
     },
     "Abrindo…",
@@ -260,7 +261,7 @@ export async function telaOrdem(el: HTMLElement, { params }: ContextoTela): Prom
 
     preencher(el,
       h("p", { class: "migalha" }, h("a", { href: "#/ordens" }, "← Ordens de Serviço")),
-      cabecalhoTela(numeroOS(os.id), tagStatus(os.status), pode.comprovante() && botaoComprovante),
+      cabecalhoTela(numeroOS(os.numero), tagStatus(os.status), pode.comprovante() && botaoComprovante),
       areaErroComprovante,
       aviso && caixaOk(aviso),
       h(
@@ -427,7 +428,7 @@ function secaoStatus(os: OrdemDetalhe, carregar: (aviso?: string) => Promise<voi
         class: `btn btn--sm btn--block ${cancelar ? "btn--perigo" : "btn--primary"}`,
         type: "button",
         onClick: () => {
-          if (cancelar && !window.confirm(`Cancelar a ${numeroOS(os.id)}? Depois disso ela só poderá ser marcada como entregue.`)) return;
+          if (cancelar && !window.confirm(`Cancelar a ${numeroOS(os.numero)}? Depois disso ela só poderá ser marcada como entregue.`)) return;
           void ocupado(botao, "Atualizando…", areaErro, async () => {
             await api.patch(`/ordens/${os.id}/status`, { status, observacao: observacao.value.trim() || undefined });
             await carregar(`Status alterado para ${ROTULO_STATUS[status]}.`);
@@ -460,6 +461,19 @@ function secaoTecnico(
     api.patch(`/ordens/${os.id}/atribuir`, { tecnicoId }).then(() => carregar(mensagem));
 
   if (pode.atribuirTecnico() && !encerrada) {
+    if (tecnicos.length === 0) {
+      return h(
+        "section",
+        { class: "painel" },
+        h("h2", {}, "Técnico"),
+        h(
+          "p",
+          { class: "vazio" },
+          "Nenhum técnico cadastrado. ",
+          pode.gerirEquipe() ? h("a", { href: "#/equipe" }, "Adicionar na equipe") : "Peça ao administrador para adicionar um técnico à equipe.",
+        ),
+      );
+    }
     const form = h(
       "form",
       { class: "form" },

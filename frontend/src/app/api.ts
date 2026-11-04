@@ -23,6 +23,24 @@ export interface Usuario {
   perfil: Perfil;
 }
 
+export interface Empresa {
+  id: number;
+  nome: string;
+  telefone: string | null;
+}
+
+export interface MembroEquipe extends Usuario {
+  ativo: boolean;
+}
+
+export interface Painel {
+  porStatus: Record<StatusOS, number>;
+  emAberto: number;
+  atrasadas: number;
+  ultimos30Dias: { abertas: number; finalizadas: number };
+  abertasPorTecnico: { tecnicoId: number | null; nome: string; quantidade: number }[];
+}
+
 export interface Pagina<T> {
   total: number;
   pagina: number;
@@ -53,11 +71,12 @@ export interface Equipamento {
 
 export interface ClienteDetalhe extends Cliente {
   equipamentos: Equipamento[];
-  ordens: { id: number; status: StatusOS; createdAt: string; equipamentoId: number }[];
+  ordens: { id: number; numero: number; status: StatusOS; createdAt: string; equipamentoId: number }[];
 }
 
 export interface OrdemResumo {
   id: number;
+  numero: number; // sequência própria de cada empresa
   status: StatusOS;
   defeitoRelatado: string;
   previsaoEntrega: string | null;
@@ -137,6 +156,7 @@ export interface Medicao {
 
 export interface SessaoDiagnostico extends SessaoResumo {
   osId: number;
+  os: { numero: number };
   causasPossiveis: CausaPossivel[] | null;
   concluidaEm: string | null;
   tecnico: { id: number; nome: string };
@@ -157,6 +177,7 @@ const CHAVE_SESSAO = "inforcell.sessao";
 interface Sessao {
   token: string;
   usuario: Usuario;
+  empresa: Empresa;
 }
 
 /** A sessão fica em sessionStorage: some ao fechar a aba, o que é mais seguro em balcão compartilhado. */
@@ -179,6 +200,7 @@ function gravarSessao(nova: Sessao | null): void {
 }
 
 export const usuarioAtual = (): Usuario | null => sessao?.usuario ?? null;
+export const empresaAtual = (): Empresa | null => sessao?.empresa ?? null;
 
 let aoExpirar: () => void = () => undefined;
 /** Define o que fazer quando a API recusa o token (sessão expirada ou inválida). */
@@ -258,9 +280,24 @@ export const api = {
 
 export async function entrar(email: string, senha: string): Promise<Usuario> {
   gravarSessao(null);
-  const r = await api.post<{ token: string; usuario: Usuario }>("/auth/login", { email, senha });
-  gravarSessao(r);
+  const r = await api.post<Sessao>("/auth/login", { email, senha });
+  gravarSessao({ token: r.token, usuario: r.usuario, empresa: r.empresa });
   return r.usuario;
+}
+
+export interface DadosCadastro {
+  nomeEmpresa: string;
+  telefoneEmpresa: string | null;
+  nome: string;
+  email: string;
+  senha: string;
+}
+
+/** Cria a empresa e o administrador dela, e já deixa a sessão aberta. */
+export async function cadastrarEmpresa(dados: DadosCadastro): Promise<void> {
+  gravarSessao(null);
+  const r = await api.post<Sessao>("/auth/cadastro", dados);
+  gravarSessao({ token: r.token, usuario: r.usuario, empresa: r.empresa });
 }
 
 export function sair(): void {
@@ -271,8 +308,8 @@ export function sair(): void {
 export async function validarSessao(): Promise<void> {
   if (!sessao) return;
   try {
-    const usuario = await api.get<Usuario>("/auth/me");
-    if (sessao) gravarSessao({ token: sessao.token, usuario });
+    const { empresa, id, nome, email, perfil } = await api.get<Usuario & { empresa: Empresa }>("/auth/me");
+    if (sessao) gravarSessao({ token: sessao.token, usuario: { id, nome, email, perfil }, empresa });
   } catch {
     /* 401 já encerrou a sessão em enviar(); outros erros aparecem na tela seguinte */
   }
@@ -307,4 +344,5 @@ export const pode = {
   comprovante: () => perfilEh("ADMIN", "ATENDENTE"),
   diagnosticar: () => perfilEh("ADMIN", "TECNICO"),
   registrarReparo: () => perfilEh("ADMIN", "TECNICO"),
+  gerirEquipe: () => perfilEh("ADMIN"),
 };

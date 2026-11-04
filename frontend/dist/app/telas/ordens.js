@@ -25,7 +25,7 @@ export async function telaOrdens(el, { consulta }) {
     aoEnviar(filtro, async (d) => irPara(hashComFiltros("#/ordens", { busca: d.busca, status: d.status })));
     preencher(el, cabecalhoTela("Ordens de Serviço", pode.abrirOS() && h("a", { class: "btn btn--primary btn--sm", href: "#/ordens/nova" }, "Nova OS")), filtro, r.dados.length === 0
         ? h("p", { class: "vazio" }, busca || status ? "Nenhuma OS encontrada com estes filtros." : "Nenhuma OS aberta até agora.")
-        : h("div", { class: "tabela" }, h("table", {}, h("thead", {}, h("tr", {}, ["Nº", "Cliente", "Equipamento", "Técnico", "Status", "Entrada"].map((t) => h("th", {}, t)))), h("tbody", {}, r.dados.map((o) => h("tr", {}, h("td", {}, h("a", { href: `#/ordens/${o.id}` }, numeroOS(o.id))), h("td", {}, o.cliente.nome), h("td", {}, `${o.equipamento.marca} ${o.equipamento.modelo}`), h("td", {}, o.tecnico?.nome ?? "Sem técnico"), h("td", {}, tagStatus(o.status)), h("td", {}, data(o.createdAt))))))), paginador(r.total, r.pagina, r.porPagina, (p) => hashComFiltros("#/ordens", { busca, status, pagina: p })));
+        : h("div", { class: "tabela" }, h("table", {}, h("thead", {}, h("tr", {}, ["Nº", "Cliente", "Equipamento", "Técnico", "Status", "Entrada"].map((t) => h("th", {}, t)))), h("tbody", {}, r.dados.map((o) => h("tr", {}, h("td", {}, h("a", { href: `#/ordens/${o.id}` }, numeroOS(o.numero))), h("td", {}, o.cliente.nome), h("td", {}, `${o.equipamento.marca} ${o.equipamento.modelo}`), h("td", {}, o.tecnico?.nome ?? "Sem técnico"), h("td", {}, tagStatus(o.status)), h("td", {}, data(o.createdAt))))))), paginador(r.total, r.pagina, r.porPagina, (p) => hashComFiltros("#/ordens", { busca, status, pagina: p })));
 }
 // ---------- Abertura ----------
 export async function telaNovaOrdem(el, { consulta }) {
@@ -91,6 +91,7 @@ export async function telaNovaOrdem(el, { consulta }) {
     const form = h("form", { class: "form form--grade" }, h("label", { class: "campo" }, h("span", { class: "campo__rotulo" }, "Buscar cliente"), buscaCliente), h("label", { class: "campo" }, h("span", { class: "campo__rotulo" }, "Cliente", h("span", { class: "campo__obrig", "aria-hidden": "true" }, " *")), seletorCliente, h("span", { class: "campo__ajuda" }, "Cliente novo? ", h("a", { href: "#/clientes" }, "Cadastre aqui."))), h("label", { class: "campo" }, h("span", { class: "campo__rotulo" }, "Equipamento", h("span", { class: "campo__obrig", "aria-hidden": "true" }, " *")), seletorEquipamento, avisoEquipamento), campo({ rotulo: "Defeito relatado", nome: "defeitoRelatado", obrigatorio: true, linhas: 3, atributos: { minlength: 3 } }), campo({ rotulo: "Acessórios entregues", nome: "acessorios", atributos: { maxlength: 255, placeholder: "Capa, chip, carregador…" } }), campo({
         rotulo: "Técnico",
         nome: "tecnicoId",
+        ajuda: tecnicos.length === 0 ? "Nenhum técnico cadastrado. O administrador pode adicionar na tela Equipe." : undefined,
         opcoes: [{ valor: "", rotulo: "Definir depois" }, ...tecnicos.map((t) => ({ valor: String(t.id), rotulo: t.nome }))],
     }), campo({ rotulo: "Previsão de entrega", nome: "previsaoEntrega", tipo: "date" }), areaErroCarga, h("div", { class: "form__acoes" }, h("button", { class: "btn btn--primary", type: "submit" }, "Abrir OS")));
     aoEnviar(form, async (d) => {
@@ -102,7 +103,7 @@ export async function telaNovaOrdem(el, { consulta }) {
             tecnicoId: d.tecnicoId ? Number(d.tecnicoId) : null,
             previsaoEntrega: dataParaIso(d.previsaoEntrega),
         });
-        definirAviso({ tipo: "ok", texto: `${numeroOS(os.id)} aberta com sucesso.` });
+        definirAviso({ tipo: "ok", texto: `${numeroOS(os.numero)} aberta com sucesso.` });
         irPara(`#/ordens/${os.id}`);
     }, "Abrindo…");
     await carregarClientes("", clienteInicial);
@@ -133,7 +134,7 @@ export async function telaOrdem(el, { params }) {
             type: "button",
             onClick: () => void ocupado(botaoComprovante, "Gerando…", areaErroComprovante, () => abrirComprovante(os.id)),
         }, "Comprovante");
-        preencher(el, h("p", { class: "migalha" }, h("a", { href: "#/ordens" }, "← Ordens de Serviço")), cabecalhoTela(numeroOS(os.id), tagStatus(os.status), pode.comprovante() && botaoComprovante), areaErroComprovante, aviso && caixaOk(aviso), h("div", { class: "colunas" }, h("div", { class: "colunas__principal" }, secaoDados(os), os.status !== "ENTREGUE" && secaoOrcamento(os, carregar), secaoReparos(os, carregar), secaoHistorico(os)), h("aside", { class: "colunas__lado" }, secaoStatus(os, carregar), secaoTecnico(os, tecnicos, carregar), secaoAssistente(os, saude?.ia ?? false))));
+        preencher(el, h("p", { class: "migalha" }, h("a", { href: "#/ordens" }, "← Ordens de Serviço")), cabecalhoTela(numeroOS(os.numero), tagStatus(os.status), pode.comprovante() && botaoComprovante), areaErroComprovante, aviso && caixaOk(aviso), h("div", { class: "colunas" }, h("div", { class: "colunas__principal" }, secaoDados(os), os.status !== "ENTREGUE" && secaoOrcamento(os, carregar), secaoReparos(os, carregar), secaoHistorico(os)), h("aside", { class: "colunas__lado" }, secaoStatus(os, carregar), secaoTecnico(os, tecnicos, carregar), secaoAssistente(os, saude?.ia ?? false))));
     };
     await carregar();
 }
@@ -195,7 +196,7 @@ function secaoStatus(os, carregar) {
             class: `btn btn--sm btn--block ${cancelar ? "btn--perigo" : "btn--primary"}`,
             type: "button",
             onClick: () => {
-                if (cancelar && !window.confirm(`Cancelar a ${numeroOS(os.id)}? Depois disso ela só poderá ser marcada como entregue.`))
+                if (cancelar && !window.confirm(`Cancelar a ${numeroOS(os.numero)}? Depois disso ela só poderá ser marcada como entregue.`))
                     return;
                 void ocupado(botao, "Atualizando…", areaErro, async () => {
                     await api.patch(`/ordens/${os.id}/status`, { status, observacao: observacao.value.trim() || undefined });
@@ -213,6 +214,9 @@ function secaoTecnico(os, tecnicos, carregar) {
     const atual = h("p", {}, os.tecnico?.nome ?? "Sem técnico");
     const atribuir = (tecnicoId, mensagem) => api.patch(`/ordens/${os.id}/atribuir`, { tecnicoId }).then(() => carregar(mensagem));
     if (pode.atribuirTecnico() && !encerrada) {
+        if (tecnicos.length === 0) {
+            return h("section", { class: "painel" }, h("h2", {}, "Técnico"), h("p", { class: "vazio" }, "Nenhum técnico cadastrado. ", pode.gerirEquipe() ? h("a", { href: "#/equipe" }, "Adicionar na equipe") : "Peça ao administrador para adicionar um técnico à equipe."));
+        }
         const form = h("form", { class: "form" }, campo({
             rotulo: "Técnico responsável",
             nome: "tecnicoId",

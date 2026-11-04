@@ -24,6 +24,7 @@ function gravarSessao(nova) {
     }
 }
 export const usuarioAtual = () => sessao?.usuario ?? null;
+export const empresaAtual = () => sessao?.empresa ?? null;
 let aoExpirar = () => undefined;
 /** Define o que fazer quando a API recusa o token (sessão expirada ou inválida). */
 export function definirAoExpirar(fn) {
@@ -92,8 +93,14 @@ export const api = {
 export async function entrar(email, senha) {
     gravarSessao(null);
     const r = await api.post("/auth/login", { email, senha });
-    gravarSessao(r);
+    gravarSessao({ token: r.token, usuario: r.usuario, empresa: r.empresa });
     return r.usuario;
+}
+/** Cria a empresa e o administrador dela, e já deixa a sessão aberta. */
+export async function cadastrarEmpresa(dados) {
+    gravarSessao(null);
+    const r = await api.post("/auth/cadastro", dados);
+    gravarSessao({ token: r.token, usuario: r.usuario, empresa: r.empresa });
 }
 export function sair() {
     gravarSessao(null);
@@ -103,9 +110,9 @@ export async function validarSessao() {
     if (!sessao)
         return;
     try {
-        const usuario = await api.get("/auth/me");
+        const { empresa, id, nome, email, perfil } = await api.get("/auth/me");
         if (sessao)
-            gravarSessao({ token: sessao.token, usuario });
+            gravarSessao({ token: sessao.token, usuario: { id, nome, email, perfil }, empresa });
     }
     catch {
         /* 401 já encerrou a sessão em enviar(); outros erros aparecem na tela seguinte */
@@ -133,4 +140,5 @@ export const pode = {
     comprovante: () => perfilEh("ADMIN", "ATENDENTE"),
     diagnosticar: () => perfilEh("ADMIN", "TECNICO"),
     registrarReparo: () => perfilEh("ADMIN", "TECNICO"),
+    gerirEquipe: () => perfilEh("ADMIN"),
 };

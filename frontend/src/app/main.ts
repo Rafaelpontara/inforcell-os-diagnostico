@@ -1,11 +1,14 @@
 /** Inforcell OS — roteador e estrutura das telas internas (app.html). */
-import { definirAoExpirar, sair, usuarioAtual, validarSessao } from "./api.js";
+import { definirAoExpirar, empresaAtual, pode, sair, usuarioAtual, validarSessao } from "./api.js";
 import { caixaErro, caixaOk, h } from "./dom.js";
 import { consumirAviso, definirAviso, irPara, registrarRenderizador } from "./nav.js";
+import { telaCadastro } from "./telas/cadastro.js";
 import { telaCliente, telaClientes } from "./telas/clientes.js";
 import { telaDiagnostico } from "./telas/diagnostico.js";
+import { telaEquipe } from "./telas/equipe.js";
 import { telaLogin } from "./telas/login.js";
 import { telaNovaOrdem, telaOrdem, telaOrdens } from "./telas/ordens.js";
+import { telaPainel } from "./telas/painel.js";
 
 export interface ContextoTela {
   params: string[];
@@ -15,6 +18,8 @@ export interface ContextoTela {
 type Tela = (el: HTMLElement, contexto: ContextoTela) => Promise<void>;
 
 const ROTAS: [RegExp, Tela][] = [
+  [/^\/painel$/, telaPainel],
+  [/^\/equipe$/, telaEquipe],
   [/^\/ordens$/, telaOrdens],
   [/^\/ordens\/nova$/, telaNovaOrdem],
   [/^\/ordens\/(\d+)$/, telaOrdem],
@@ -23,7 +28,8 @@ const ROTAS: [RegExp, Tela][] = [
   [/^\/diagnosticos\/(\d+)$/, telaDiagnostico],
 ];
 
-const INICIO = "#/ordens";
+const INICIO = "#/painel";
+const ROTAS_PUBLICAS = ["/login", "/cadastro"];
 const ROTULO_PERFIL = { ADMIN: "Administrador", ATENDENTE: "Atendente", TECNICO: "Técnico" };
 
 let destinoAposLogin = INICIO;
@@ -45,13 +51,16 @@ function cabecalho(caminho: string): HTMLElement {
       h(
         "nav",
         { class: "app-nav", "aria-label": "Navegação principal" },
+        link("#/painel", "Painel", "/painel"),
         link("#/ordens", "Ordens de Serviço", "/ordens"),
         link("#/clientes", "Clientes", "/clientes"),
+        pode.gerirEquipe() && link("#/equipe", "Equipe", "/equipe"),
       ),
     u &&
       h(
         "div",
         { class: "app-usuario" },
+        h("span", { class: "app-usuario__empresa" }, empresaAtual()?.nome),
         h("span", {}, u.nome, " ", h("span", { class: "tag" }, ROTULO_PERFIL[u.perfil])),
         h(
           "button",
@@ -78,12 +87,13 @@ async function renderizar(): Promise<void> {
   if (!topo || !principal) return;
 
   const logado = usuarioAtual() !== null;
-  if (!logado && caminho !== "/login") {
+  const publica = ROTAS_PUBLICAS.includes(caminho);
+  if (!logado && !publica) {
     destinoAposLogin = caminho === "/" ? INICIO : `#${hash}`;
     irPara("#/login");
     return;
   }
-  if (logado && (caminho === "/login" || caminho === "/")) {
+  if (logado && (publica || caminho === "/")) {
     irPara(INICIO);
     return;
   }
@@ -105,11 +115,15 @@ async function renderizar(): Promise<void> {
     telaLogin(el, destinoAposLogin);
     return;
   }
+  if (caminho === "/cadastro") {
+    telaCadastro(el, INICIO);
+    return;
+  }
 
   const contexto = { consulta: new URLSearchParams(query) };
   const rota = ROTAS.find(([padrao]) => padrao.test(caminho));
   if (!rota) {
-    el.replaceChildren(h("h1", { class: "tela__titulo" }, "Página não encontrada"), h("p", {}, h("a", { href: INICIO }, "Ir para as Ordens de Serviço")));
+    el.replaceChildren(h("h1", { class: "tela__titulo" }, "Página não encontrada"), h("p", {}, h("a", { href: INICIO }, "Ir para o painel")));
     return;
   }
 

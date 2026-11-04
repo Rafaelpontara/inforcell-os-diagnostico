@@ -9,7 +9,7 @@ export function telaLogin(el, destino) {
         await entrar(d.email, d.senha);
         irPara(destino);
     }, "Entrando…");
-    el.replaceChildren(h("div", { class: "login" }, h("p", { class: "eyebrow" }, "// inforcell os"), h("h1", { class: "tela__titulo", tabindex: "-1" }, "Acessar o sistema"), form, configuracaoApi(), h("p", { class: "login__voltar" }, h("a", { href: "index.html" }, "← Voltar à página inicial"))));
+    el.replaceChildren(h("div", { class: "login" }, h("p", { class: "eyebrow" }, "// inforcell os"), h("h1", { class: "tela__titulo", tabindex: "-1" }, "Acessar o sistema"), form, h("p", { class: "login__alternar" }, "Ainda não tem conta? ", h("a", { href: "#/cadastro" }, "Cadastrar assistência")), configuracaoApi(), h("p", { class: "login__voltar" }, h("a", { href: "index.html" }, "← Voltar à página inicial"))));
 }
 function configuracaoApi() {
     const resultado = h("div", { "aria-live": "polite" });

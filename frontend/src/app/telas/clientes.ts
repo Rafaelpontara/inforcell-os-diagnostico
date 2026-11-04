@@ -229,7 +229,7 @@ export async function telaCliente(el: HTMLElement, { params }: ContextoTela): Pr
                   h(
                     "div",
                     {},
-                    h("a", { href: `#/ordens/${o.id}` }, numeroOS(o.id)),
+                    h("a", { href: `#/ordens/${o.id}` }, numeroOS(o.numero)),
                     h("p", { class: "item__sub" }, `${nomeEquipamento(o.equipamentoId)} · entrada em ${data(o.createdAt)}`),
                   ),
                   tagStatus(o.status),

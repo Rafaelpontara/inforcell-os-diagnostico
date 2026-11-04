@@ -28,6 +28,7 @@ export function telaLogin(el: HTMLElement, destino: string): void {
       h("p", { class: "eyebrow" }, "// inforcell os"),
       h("h1", { class: "tela__titulo", tabindex: "-1" }, "Acessar o sistema"),
       form,
+      h("p", { class: "login__alternar" }, "Ainda não tem conta? ", h("a", { href: "#/cadastro" }, "Cadastrar assistência")),
       configuracaoApi(),
       h("p", { class: "login__voltar" }, h("a", { href: "index.html" }, "← Voltar à página inicial")),
     ),

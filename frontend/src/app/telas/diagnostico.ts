@@ -101,7 +101,7 @@ export async function telaDiagnostico(el: HTMLElement, { params }: ContextoTela)
     const ativa = s.status === "ATIVA";
 
     preencher(el,
-      h("p", { class: "migalha" }, h("a", { href: `#/ordens/${s.osId}` }, `← ${numeroOS(s.osId)}`)),
+      h("p", { class: "migalha" }, h("a", { href: `#/ordens/${s.osId}` }, `← ${numeroOS(s.os.numero)}`)),
       cabecalhoTela("Assistente de diagnóstico", h("span", { class: `etiqueta ${ativa ? "etiqueta--em_diagnostico" : "etiqueta--finalizado"}` }, ativa ? "Em andamento" : "Concluído")),
       h("p", { class: "texto-livre sintoma" }, h("strong", {}, "Sintoma: "), s.sintoma),
       aviso && caixaOk(aviso),

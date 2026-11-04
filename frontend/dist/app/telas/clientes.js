@@ -85,7 +85,7 @@ export async function telaCliente(el, { params }) {
                 await carregar("Equipamento adicionado.");
             }))), h("section", { class: "painel" }, h("h2", {}, "Ordens de Serviço"), c.ordens.length === 0
             ? h("p", { class: "vazio" }, "Nenhuma OS aberta para este cliente.")
-            : h("ul", { class: "lista-itens" }, c.ordens.map((o) => h("li", { class: "item item__topo" }, h("div", {}, h("a", { href: `#/ordens/${o.id}` }, numeroOS(o.id)), h("p", { class: "item__sub" }, `${nomeEquipamento(o.equipamentoId)} · entrada em ${data(o.createdAt)}`)), tagStatus(o.status))))));
+            : h("ul", { class: "lista-itens" }, c.ordens.map((o) => h("li", { class: "item item__topo" }, h("div", {}, h("a", { href: `#/ordens/${o.id}` }, numeroOS(o.numero)), h("p", { class: "item__sub" }, `${nomeEquipamento(o.equipamentoId)} · entrada em ${data(o.createdAt)}`)), tagStatus(o.status))))));
     };
     await carregar();
 }
