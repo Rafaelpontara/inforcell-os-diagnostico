@@ -1,5 +1,13 @@
 # Histórico de versões — Front-end FIXBOT.AI
 
+## [0.2.0] — 04/11/2026
+### Adicionado
+- Telas internas em `app.html`, integradas à API: login com JWT, clientes e equipamentos, Ordens de Serviço (lista, abertura, técnico, orçamento, status, reparos, histórico e comprovante) e assistente de diagnóstico com IA.
+- URL da API configurável pela `<meta name="inforcell-api">` e pela tela de login.
+
+### Alterado
+- Os botões "Entrar" e "Iniciar diagnóstico" da página inicial agora levam às telas internas.
+
 ## [0.1.1] — 05/10/2026
 Correções feitas após os testes da página inicial (desktop, tablet e celular).
 
