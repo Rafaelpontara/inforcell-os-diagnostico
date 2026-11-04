@@ -145,7 +145,7 @@ describe.skipIf(!temBanco)("fluxo completo de uma OS com diagnóstico guiado", (
     // RF20 / RF19 / RF21 / HU08
     const comp = await request(app).get(`/api/ordens/${osId}/comprovante`).set(auth("atendente"));
     expect(comp.status).toBe(200);
-    expect(comp.text).toContain(`OS-${String(osId).padStart(4, "0")}`);
+    expect(comp.text).toContain(`OS-${String(os.body.numero).padStart(4, "0")}`);
     const hist = await request(app).get(`/api/equipamentos/${eq.body.id}/historico`).set(auth("tecnico"));
     expect(hist.body.ordens[0].reparos).toHaveLength(1);
     const busca = await request(app).get(`/api/ordens?busca=${eq.body.imei}`).set(auth("admin"));

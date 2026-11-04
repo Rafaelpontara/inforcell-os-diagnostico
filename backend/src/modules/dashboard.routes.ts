@@ -10,7 +10,7 @@ const ABERTAS: StatusOS[] = ["RECEBIDO", "EM_DIAGNOSTICO", "AGUARDANDO_APROVACAO
 
 dashboardRoutes.get("/", async (req, res) => {
   const u = usuarioAtual(req);
-  const escopo = u.perfil === "TECNICO" ? { tecnicoId: u.id } : {};
+  const escopo = u.perfil === "TECNICO" ? { empresaId: u.empresaId, tecnicoId: u.id } : { empresaId: u.empresaId };
   const trintaDias = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
 
   const [porStatus, atrasadas, abertas30, finalizadas30, porTecnico] = await Promise.all([
@@ -22,13 +22,13 @@ dashboardRoutes.get("/", async (req, res) => {
       ? Promise.resolve([])
       : prisma.ordemServico.groupBy({
           by: ["tecnicoId"],
-          where: { status: { in: ABERTAS } },
+          where: { empresaId: u.empresaId, status: { in: ABERTAS } },
           _count: { _all: true },
         }),
   ]);
 
   const tecnicos = await prisma.usuario.findMany({
-    where: { id: { in: porTecnico.map((t) => t.tecnicoId).filter((x): x is number => x !== null) } },
+    where: { empresaId: u.empresaId, id: { in: porTecnico.map((t) => t.tecnicoId).filter((x): x is number => x !== null) } },
     select: { id: true, nome: true },
   });
 

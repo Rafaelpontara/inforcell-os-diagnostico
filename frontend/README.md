@@ -3,16 +3,19 @@
 Interface web do assistente de diagnóstico inteligente da **Inforcell** (UNIBALSAS – Sistemas de Informação).
 Tecnologias definidas no Documento Técnico (Quadro 11): **HTML, CSS e TypeScript**, sem frameworks.
 
-> Estado atual: **página inicial (landing page)** concluída. Integração com a IA (API da Anthropic) prevista para a Sprint 3.
+> Estado atual: **página inicial** e **telas internas** (cadastro de assistências, login, painel, equipe, clientes e equipamentos, Ordens de Serviço e assistente de diagnóstico) integradas à API do back-end Inforcell OS.
 
 ## Estrutura
 
 ```
 frontend/
 ├── index.html        Página inicial (estrutura semântica e acessível)
+├── app.html          Telas internas, que consomem a API
 ├── css/styles.css    Estilos: tokens de design, componentes, seções e responsividade
-├── src/main.ts       Comportamentos da interface em TypeScript
-├── dist/main.js      JavaScript compilado (gerado pelo `npm run build`)
+├── css/app.css       Estilos das telas internas
+├── src/main.ts       Comportamentos da página inicial
+├── src/app/          Telas internas: cliente HTTP (api.ts), URL da API (config.ts), roteador (main.ts) e telas/
+├── dist/             JavaScript compilado (gerado pelo `npm run build`; a publicação usa esta pasta como está)
 ├── assets/           Ícones e imagens
 ├── tsconfig.json     Configuração do compilador TypeScript (modo strict)
 └── package.json      Scripts de build e servidor local
@@ -27,7 +30,7 @@ frontend/
 ```bash
 cd frontend
 npm install        # instala o TypeScript
-npm run build      # compila src/main.ts -> dist/main.js
+npm run build      # compila src/ -> dist/
 npm run serve      # servidor local em http://localhost:5173
 ```
 
@@ -38,9 +41,27 @@ Ou, em um passo: `npm run dev`. Durante o desenvolvimento, `npm run watch` recom
 
 O histórico de alterações está em [CHANGELOG.md](CHANGELOG.md).
 
+## Telas internas (`app.html`)
+
+Precisam da API do back-end em execução (veja o README do back-end). Com a API e o `npm run serve` no ar, acesse **http://localhost:5173/app.html** (use `localhost`: é a origem liberada em `CORS_ORIGIN`; pelo `file://` as telas não funcionam).
+
+| Tela | O que faz | Perfis |
+|---|---|---|
+| Cadastrar assistência | Cria a empresa e o administrador dela. Cada empresa só vê os próprios dados | Público |
+| Login | Autenticação com JWT. O token fica no `sessionStorage` e some ao fechar a aba | Todos |
+| Painel | Indicadores e OS por status da empresa | Todos |
+| Equipe | Adiciona, desativa e reativa atendentes, técnicos e administradores | ADMIN |
+| Clientes | Busca, cadastro e edição de clientes e de seus equipamentos | Cadastro: ADMIN e ATENDENTE |
+| Ordens de Serviço | Lista com filtros, abertura de OS, técnico, orçamento, status, reparos, histórico e comprovante | Abertura: ADMIN e ATENDENTE |
+| Assistente de diagnóstico | Conversa guiada com a IA, medições e conclusão do diagnóstico | ADMIN e TECNICO |
+
+**URL da API:** o padrão é `http://localhost:3333/api`, definido na `<meta name="inforcell-api">` do `app.html`. Cada navegador pode trocá-la na tela de login, em *Configurar conexão com a API* (fica salva no `localStorage`).
+
+> **GitHub Pages:** a página publicada é estática e só funciona com uma API publicada, com a origem do site incluída em `CORS_ORIGIN`. Sem a `ANTHROPIC_API_KEY` no servidor, o restante funciona e o assistente mostra um aviso.
+
 ## Utilização
 
-A página inicial apresenta o produto e leva às próximas telas (login e painel, Sprint 1):
+A página inicial apresenta o produto e leva às telas internas pelo botão Entrar:
 
 | Seção | Conteúdo |
 |---|---|

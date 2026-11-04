@@ -2,10 +2,10 @@ import { Router } from "express";
 import { z } from "zod";
 import { TipoEquipamento } from "@prisma/client";
 import { prisma } from "../lib/prisma";
-import { autorizar } from "../middlewares/auth";
+import { autorizar, usuarioAtual } from "../middlewares/auth";
 import { notFound, paginacao, parseId } from "../utils/http";
 
-/** Seção 17 — Base de conhecimento técnico */
+/** Seção 17 — Base de conhecimento técnico, própria de cada empresa */
 export const conhecimentoRoutes = Router();
 
 const artigoSchema = z.object({
@@ -23,6 +23,7 @@ conhecimentoRoutes.get("/", async (req, res) => {
   const busca = typeof req.query.busca === "string" ? req.query.busca.trim() : "";
   const tipo = req.query.tipo as TipoEquipamento | undefined;
   const where = {
+    empresaId: usuarioAtual(req).empresaId,
     ...(tipo && tipo in TipoEquipamento ? { tipoEquipamento: tipo } : {}),
     ...(busca
       ? {
@@ -43,21 +44,29 @@ conhecimentoRoutes.get("/", async (req, res) => {
 });
 
 conhecimentoRoutes.get("/:id", async (req, res) => {
-  const a = await prisma.artigoConhecimento.findUnique({ where: { id: parseId(req.params.id) } });
+  const a = await prisma.artigoConhecimento.findFirst({
+    where: { id: parseId(req.params.id), empresaId: usuarioAtual(req).empresaId },
+  });
   if (!a) throw notFound("Artigo");
   res.json(a);
 });
 
 conhecimentoRoutes.post("/", autorizar("ADMIN", "TECNICO"), async (req, res) => {
-  res.status(201).json(await prisma.artigoConhecimento.create({ data: artigoSchema.parse(req.body) }));
+  const dados = artigoSchema.parse(req.body);
+  res.status(201).json(await prisma.artigoConhecimento.create({ data: { ...dados, empresaId: usuarioAtual(req).empresaId } }));
 });
 
 conhecimentoRoutes.patch("/:id", autorizar("ADMIN", "TECNICO"), async (req, res) => {
   const dados = artigoSchema.partial().parse(req.body);
-  res.json(await prisma.artigoConhecimento.update({ where: { id: parseId(req.params.id) }, data: dados }));
+  res.json(
+    await prisma.artigoConhecimento.update({
+      where: { id: parseId(req.params.id), empresaId: usuarioAtual(req).empresaId },
+      data: dados,
+    }),
+  );
 });
 
 conhecimentoRoutes.delete("/:id", autorizar("ADMIN"), async (req, res) => {
-  await prisma.artigoConhecimento.delete({ where: { id: parseId(req.params.id) } });
+  await prisma.artigoConhecimento.delete({ where: { id: parseId(req.params.id), empresaId: usuarioAtual(req).empresaId } });
   res.status(204).end();
 });

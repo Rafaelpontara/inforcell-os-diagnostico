@@ -6,6 +6,14 @@ API REST da **Plataforma Inteligente para Gestão de Ordens de Serviço e Diagn�
 
 ---
 
+## Publicação
+
+O arquivo `render.yaml`, na raiz do repositório, publica em um único serviço a API e as telas da pasta `frontend/`. O banco MySQL fica em um serviço externo, informado em `DATABASE_URL`. As migrações rodam a cada inicialização. Não rode o seed em produção: as senhas dele são públicas neste README.
+
+Rotas públicas têm limite por IP: 20 tentativas de login a cada 15 minutos e 10 cadastros por hora.
+
+---
+
 ## Como rodar
 
 ```bash
@@ -23,7 +31,7 @@ npm run db:seed
 npm run dev                 # http://localhost:3333/api
 ```
 
-Usuários criados pelo seed (senha `inforcell123`): `admin@inforcell.local`, `atendente@inforcell.local`, `tecnico@inforcell.local`.
+Usuários criados pelo seed na empresa de exemplo "Inforcell" (senha `inforcell123`): `admin@inforcell.local`, `atendente@inforcell.local`, `tecnico@inforcell.local`. Outras assistências se cadastram por `POST /api/auth/cadastro`.
 
 > Sem `ANTHROPIC_API_KEY` a API funciona normalmente; só as rotas de diagnóstico com IA respondem 503.
 
@@ -31,7 +39,7 @@ Usuários criados pelo seed (senha `inforcell123`): `admin@inforcell.local`, `at
 
 ```bash
 npm test          # testes unitários + rotas que não usam banco
-npm run test:api  # fluxo completo de uma OS contra o banco (exige migrate + seed); a IA é simulada
+npm run test:api  # fluxo completo de uma OS e isolamento entre empresas contra o banco (exige migrate + seed); a IA é simulada. Grava dados: aponte DATABASE_URL para um banco só de testes
 ```
 
 ---
@@ -67,7 +75,11 @@ tests/                   testes com Vitest + Supertest
 | **ATENDENTE** | cadastrar clientes e equipamentos, abrir OS, atribuir técnico, registrar aprovação do cliente e entrega, gerar comprovante |
 | **TECNICO** | ver as OS atribuídas a ele e a fila sem técnico, usar o assistente de IA, registrar medições e reparos, mover a OS nas etapas técnicas |
 
-Todas as rotas, exceto `/api/health` e `/api/auth/login`, exigem o cabeçalho `Authorization: Bearer <token>`.
+Todas as rotas, exceto `/api/health`, `/api/auth/login` e `/api/auth/cadastro`, exigem o cabeçalho `Authorization: Bearer <token>`.
+
+## Empresas
+
+Cada assistência é uma empresa, e o token JWT carrega o `empresaId` do usuário. Todas as rotas filtram por ele: um registro de outra empresa responde 404, como se não existisse. Clientes, equipamentos, OS (com numeração própria), diagnósticos, base de conhecimento e usuários ficam separados. O e-mail de login é único em todo o sistema; o CPF de cliente é único dentro de cada empresa.
 
 ---
 
@@ -76,7 +88,8 @@ Todas as rotas, exceto `/api/health` e `/api/auth/login`, exigem o cabeçalho `A
 ### Autenticação
 | Método | Rota | Descrição |
 |---|---|---|
-| POST | `/api/auth/login` | `{ email, senha }` → `{ token, usuario }` |
+| POST | `/api/auth/cadastro` | `{ nomeEmpresa, telefoneEmpresa?, nome, email, senha }` → cria a empresa e o administrador; retorna `{ token, usuario, empresa }` |
+| POST | `/api/auth/login` | `{ email, senha }` → `{ token, usuario, empresa }` |
 | GET | `/api/auth/me` | usuário logado |
 | PATCH | `/api/auth/me/senha` | `{ senhaAtual, novaSenha }` |
 

@@ -54,10 +54,30 @@ enum AvaliacaoMedicao {
   INDEFINIDO
 }
 
+// ---------- Empresas (cada assistência técnica vê apenas os próprios dados) ----------
+
+model Empresa {
+  id             Int      @id @default(autoincrement())
+  nome           String   @db.VarChar(120)
+  telefone       String?  @db.VarChar(20)
+  ultimoNumeroOS Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  usuarios     Usuario[]
+  clientes     Cliente[]
+  equipamentos Equipamento[]
+  ordens       OrdemServico[]
+  artigos      ArtigoConhecimento[]
+
+  @@map("empresas")
+}
+
 // ---------- Usuários (RF01, RF02) ----------
 
 model Usuario {
   id        Int      @id @default(autoincrement())
+  empresaId Int
   nome      String   @db.VarChar(120)
   email     String   @unique @db.VarChar(160)
   senhaHash String   @db.VarChar(100)
@@ -66,6 +86,7 @@ model Usuario {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  empresa      Empresa             @relation(fields: [empresaId], references: [id])
   osAbertas    OrdemServico[]      @relation("AtendenteOS")
   osAtribuidas OrdemServico[]      @relation("TecnicoOS")
   historicos   HistoricoStatus[]
@@ -79,17 +100,20 @@ model Usuario {
 
 model Cliente {
   id        Int      @id @default(autoincrement())
+  empresaId Int
   nome      String   @db.VarChar(120)
-  cpf       String?  @unique @db.VarChar(14)
+  cpf       String?  @db.VarChar(14)
   telefone  String   @db.VarChar(20)
   email     String?  @db.VarChar(160)
   endereco  String?  @db.VarChar(255)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  empresa      Empresa        @relation(fields: [empresaId], references: [id])
   equipamentos Equipamento[]
   ordens       OrdemServico[]
 
+  @@unique([empresaId, cpf])
   @@index([telefone])
   @@map("clientes")
 }
@@ -98,6 +122,7 @@ model Cliente {
 
 model Equipamento {
   id          Int             @id @default(autoincrement())
+  empresaId   Int
   clienteId   Int
   tipo        TipoEquipamento
   marca       String          @db.VarChar(60)
@@ -109,6 +134,7 @@ model Equipamento {
   createdAt   DateTime        @default(now())
   updatedAt   DateTime        @updatedAt
 
+  empresa Empresa        @relation(fields: [empresaId], references: [id])
   cliente Cliente        @relation(fields: [clienteId], references: [id])
   ordens  OrdemServico[]
 
@@ -121,6 +147,8 @@ model Equipamento {
 
 model OrdemServico {
   id              Int       @id @default(autoincrement())
+  empresaId       Int
+  numero          Int // sequência própria de cada empresa (OS-0001, OS-0002...)
   clienteId       Int
   equipamentoId   Int
   atendenteId     Int
@@ -136,6 +164,7 @@ model OrdemServico {
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
+  empresa     Empresa             @relation(fields: [empresaId], references: [id])
   cliente     Cliente             @relation(fields: [clienteId], references: [id])
   equipamento Equipamento         @relation(fields: [equipamentoId], references: [id])
   atendente   Usuario             @relation("AtendenteOS", fields: [atendenteId], references: [id])
@@ -145,6 +174,7 @@ model OrdemServico {
   medicoes    Medicao[]
   reparos     Reparo[]
 
+  @@unique([empresaId, numero])
   @@index([status])
   @@index([tecnicoId])
   @@map("ordens_servico")
@@ -239,6 +269,7 @@ model Reparo {
 
 model ArtigoConhecimento {
   id              Int              @id @default(autoincrement())
+  empresaId       Int
   titulo          String           @db.VarChar(160)
   tipoEquipamento TipoEquipamento?
   marca           String?          @db.VarChar(60)
@@ -249,6 +280,8 @@ model ArtigoConhecimento {
   origemOsId      Int?
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
+
+  empresa Empresa @relation(fields: [empresaId], references: [id])
 
   @@map("base_conhecimento")
 }

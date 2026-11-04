@@ -25,9 +25,9 @@ export function pontuar(
 }
 
 /** Busca os artigos mais relevantes para dar contexto à IA (Seção 17). */
-export async function buscarArtigosRelevantes(tipo: TipoEquipamento, marca: string, modelo: string, sintoma: string, limite = 3) {
+export async function buscarArtigosRelevantes(empresaId: number, tipo: TipoEquipamento, marca: string, modelo: string, sintoma: string, limite = 3) {
   const candidatos = await prisma.artigoConhecimento.findMany({
-    where: { OR: [{ tipoEquipamento: tipo }, { tipoEquipamento: null }] },
+    where: { empresaId, OR: [{ tipoEquipamento: tipo }, { tipoEquipamento: null }] },
     take: 200,
     orderBy: { updatedAt: "desc" },
   });
