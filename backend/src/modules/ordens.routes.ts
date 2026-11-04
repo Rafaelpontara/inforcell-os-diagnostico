@@ -17,8 +17,9 @@ export function garantirAcesso(os: Pick<OrdemServico, "tecnicoId">, u: UsuarioTo
   }
 }
 
+/** OS de outra empresa responde como inexistente, sem revelar que o registro existe. */
 export async function buscarOS(id: number, u: UsuarioToken) {
-  const os = await prisma.ordemServico.findUnique({ where: { id } });
+  const os = await prisma.ordemServico.findFirst({ where: { id, empresaId: u.empresaId } });
   if (!os) throw notFound("Ordem de Serviço");
   garantirAcesso(os, u);
   return os;
@@ -53,7 +54,7 @@ ordensRoutes.get("/", async (req, res) => {
   const u = usuarioAtual(req);
   const { skip, take, pagina, porPagina } = paginacao(req.query);
   const q = req.query;
-  const filtros: Prisma.OrdemServicoWhereInput[] = [];
+  const filtros: Prisma.OrdemServicoWhereInput[] = [{ empresaId: u.empresaId }];
 
   if (typeof q.status === "string") {
     const lista = q.status.split(",").filter((s): s is StatusOS => s in TRANSICOES);
@@ -67,7 +68,7 @@ ordensRoutes.get("/", async (req, res) => {
     const numero = Number(b.replace(/^OS-?/i, ""));
     filtros.push({
       OR: [
-        ...(Number.isInteger(numero) && numero > 0 ? [{ id: numero }] : []),
+        ...(Number.isInteger(numero) && numero > 0 ? [{ numero }] : []),
         { cliente: { nome: { contains: b } } },
         { cliente: { telefone: { contains: b.replace(/\D/g, "") || b } } },
         { equipamento: { imei: { contains: b } } },
@@ -79,7 +80,7 @@ ordensRoutes.get("/", async (req, res) => {
   // HU04 — técnico vê as suas OS e a fila ainda não atribuída
   if (u.perfil === "TECNICO") filtros.push({ OR: [{ tecnicoId: u.id }, { tecnicoId: null }] });
 
-  const where: Prisma.OrdemServicoWhereInput = filtros.length ? { AND: filtros } : {};
+  const where: Prisma.OrdemServicoWhereInput = { AND: filtros };
   const [total, dados] = await Promise.all([
     prisma.ordemServico.count({ where }),
     prisma.ordemServico.findMany({ where, skip, take, include: listaInclude, orderBy: { createdAt: "desc" } }),
@@ -90,8 +91,8 @@ ordensRoutes.get("/", async (req, res) => {
 // ---------- Detalhes (RF08) ----------
 ordensRoutes.get("/:id", async (req, res) => {
   const u = usuarioAtual(req);
-  const os = await prisma.ordemServico.findUnique({
-    where: { id: parseId(req.params.id) },
+  const os = await prisma.ordemServico.findFirst({
+    where: { id: parseId(req.params.id), empresaId: u.empresaId },
     include: {
       ...listaInclude,
       cliente: true,
@@ -111,18 +112,28 @@ ordensRoutes.get("/:id", async (req, res) => {
 ordensRoutes.post("/", autorizar("ADMIN", "ATENDENTE"), async (req, res) => {
   const u = usuarioAtual(req);
   const dados = criarSchema.parse(req.body);
-  const eq = await prisma.equipamento.findUnique({ where: { id: dados.equipamentoId } });
+  const eq = await prisma.equipamento.findFirst({ where: { id: dados.equipamentoId, empresaId: u.empresaId } });
   if (!eq) throw notFound("Equipamento");
   if (eq.clienteId !== dados.clienteId) throw new AppError(400, "O equipamento não pertence a este cliente.");
-  if (dados.tecnicoId) await validarTecnico(dados.tecnicoId);
+  if (dados.tecnicoId) await validarTecnico(dados.tecnicoId, u.empresaId);
 
-  const os = await prisma.ordemServico.create({
-    data: {
-      ...dados,
-      atendenteId: u.id,
-      historico: { create: { usuarioId: u.id, de: null, para: "RECEBIDO", observacao: "Abertura da OS" } },
-    },
-    include: listaInclude,
+  const os = await prisma.$transaction(async (tx) => {
+    // O incremento trava a linha da empresa, então duas OS simultâneas não repetem o número.
+    const { ultimoNumeroOS } = await tx.empresa.update({
+      where: { id: u.empresaId },
+      data: { ultimoNumeroOS: { increment: 1 } },
+      select: { ultimoNumeroOS: true },
+    });
+    return tx.ordemServico.create({
+      data: {
+        ...dados,
+        empresaId: u.empresaId,
+        numero: ultimoNumeroOS,
+        atendenteId: u.id,
+        historico: { create: { usuarioId: u.id, de: null, para: "RECEBIDO", observacao: "Abertura da OS" } },
+      },
+      include: listaInclude,
+    });
   });
   res.status(201).json(os);
 });
@@ -136,8 +147,8 @@ ordensRoutes.patch("/:id", async (req, res) => {
 });
 
 // ---------- Atribuir técnico (RF07) ----------
-async function validarTecnico(id: number) {
-  const t = await prisma.usuario.findUnique({ where: { id } });
+async function validarTecnico(id: number, empresaId: number) {
+  const t = await prisma.usuario.findFirst({ where: { id, empresaId } });
   if (!t || t.perfil !== "TECNICO" || !t.ativo) throw new AppError(400, "Técnico inválido ou inativo.");
 }
 
@@ -147,7 +158,7 @@ ordensRoutes.patch("/:id/atribuir", async (req, res) => {
   const os = await buscarOS(parseId(req.params.id), u);
   // técnico pode apenas assumir para si uma OS livre
   if (u.perfil === "TECNICO" && tecnicoId !== u.id) throw forbidden("Técnico só pode assumir OS para si.");
-  await validarTecnico(tecnicoId);
+  await validarTecnico(tecnicoId, u.empresaId);
   res.json(await prisma.ordemServico.update({ where: { id: os.id }, data: { tecnicoId }, include: listaInclude }));
 });
 
@@ -224,9 +235,15 @@ ordensRoutes.post("/:id/reparos", autorizar("TECNICO", "ADMIN"), async (req, res
 
 // ---------- Comprovante para o cliente (RF20) ----------
 ordensRoutes.get("/:id/comprovante", autorizar("ADMIN", "ATENDENTE"), async (req, res) => {
-  const os = await prisma.ordemServico.findUnique({
-    where: { id: parseId(req.params.id) },
-    include: { cliente: true, equipamento: true, reparos: true, atendente: { select: { nome: true } } },
+  const os = await prisma.ordemServico.findFirst({
+    where: { id: parseId(req.params.id), empresaId: usuarioAtual(req).empresaId },
+    include: {
+      empresa: { select: { nome: true, telefone: true } },
+      cliente: true,
+      equipamento: true,
+      reparos: true,
+      atendente: { select: { nome: true } },
+    },
   });
   if (!os) throw notFound("Ordem de Serviço");
   res.type("html").send(renderComprovante(os));

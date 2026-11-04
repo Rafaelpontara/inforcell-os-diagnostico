@@ -1,3 +1,5 @@
+import fs from "node:fs";
+import path from "node:path";
 import express from "express";
 import cors from "cors";
 import helmet from "helmet";
@@ -13,9 +15,24 @@ import { diagnosticosRoutes } from "./modules/diagnosticos.routes";
 import { conhecimentoRoutes } from "./modules/conhecimento.routes";
 import { dashboardRoutes } from "./modules/dashboard.routes";
 
+/**
+ * Publica as telas junto com a API, em um único endereço. Serve só o necessário para o site,
+ * e não os arquivos de código e de configuração da pasta frontend/.
+ */
+function servirFrontend(app: express.Express) {
+  const raiz = path.resolve(process.cwd(), "../frontend");
+  if (!fs.existsSync(path.join(raiz, "app.html"))) return;
+  for (const pasta of ["css", "dist", "assets"]) {
+    app.use(`/${pasta}`, express.static(path.join(raiz, pasta)));
+  }
+  app.get(["/", "/index.html"], (_req, res) => res.sendFile("index.html", { root: raiz }));
+  app.get("/app.html", (_req, res) => res.sendFile("app.html", { root: raiz }));
+}
+
 export function criarApp() {
   const app = express();
 
+  app.set("trust proxy", 1); // a hospedagem fica atrás de um proxy; o limite de tentativas precisa do IP real
   app.use(helmet({ contentSecurityPolicy: false })); // CSP desativada para o comprovante HTML imprimível
   app.use(
     cors({
@@ -44,6 +61,7 @@ export function criarApp() {
   app.use("/api", api);
 
   app.use("/api", (_req, res) => res.status(404).json({ erro: "Rota não encontrada." }));
+  servirFrontend(app);
   app.use(errorHandler);
   return app;
 }

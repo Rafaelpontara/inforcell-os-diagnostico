@@ -1,5 +1,5 @@
 /**
- * Dados iniciais para desenvolvimento e apresentação.
+ * Dados iniciais para desenvolvimento e apresentação: a empresa de exemplo "Inforcell".
  * Executar: npm run db:seed
  * Todos os usuários de teste usam a senha: inforcell123
  */
@@ -11,6 +11,11 @@ const prisma = new PrismaClient();
 async function main() {
   const senhaHash = await bcrypt.hash("inforcell123", 10);
 
+  const empresa =
+    (await prisma.empresa.findFirst({ where: { nome: "Inforcell" }, orderBy: { id: "asc" } })) ??
+    (await prisma.empresa.create({ data: { nome: "Inforcell" } }));
+  const empresaId = empresa.id;
+
   const usuarios = [
     { nome: "Administrador", email: "admin@inforcell.local", perfil: "ADMIN" as const },
     { nome: "Atendente", email: "atendente@inforcell.local", perfil: "ATENDENTE" as const },
@@ -18,25 +23,27 @@ async function main() {
   ];
   const criados: Record<string, number> = {};
   for (const u of usuarios) {
-    const r = await prisma.usuario.upsert({ where: { email: u.email }, update: {}, create: { ...u, senhaHash } });
+    const r = await prisma.usuario.upsert({ where: { email: u.email }, update: {}, create: { ...u, senhaHash, empresaId } });
     criados[u.perfil] = r.id;
   }
 
-  if ((await prisma.cliente.count()) === 0) {
+  if ((await prisma.cliente.count({ where: { empresaId } })) === 0) {
     const maria = await prisma.cliente.create({
-      data: { nome: "Maria Silva (exemplo)", telefone: "99900000001" },
+      data: { empresaId, nome: "Maria Silva (exemplo)", telefone: "99900000001" },
     });
-    const joao = await prisma.cliente.create({ data: { nome: "João Souza (exemplo)", telefone: "99900000002" } });
+    const joao = await prisma.cliente.create({ data: { empresaId, nome: "João Souza (exemplo)", telefone: "99900000002" } });
 
     const iphone = await prisma.equipamento.create({
-      data: { clienteId: maria.id, tipo: "CELULAR", marca: "Apple", modelo: "iPhone 11" },
+      data: { empresaId, clienteId: maria.id, tipo: "CELULAR", marca: "Apple", modelo: "iPhone 11" },
     });
     const note = await prisma.equipamento.create({
-      data: { clienteId: joao.id, tipo: "NOTEBOOK", marca: "Dell", modelo: "Inspiron 15 3000" },
+      data: { empresaId, clienteId: joao.id, tipo: "NOTEBOOK", marca: "Dell", modelo: "Inspiron 15 3000" },
     });
 
     await prisma.ordemServico.create({
       data: {
+        empresaId,
+        numero: 1,
         clienteId: maria.id,
         equipamentoId: iphone.id,
         atendenteId: criados.ATENDENTE,
@@ -46,6 +53,8 @@ async function main() {
     });
     await prisma.ordemServico.create({
       data: {
+        empresaId,
+        numero: 2,
         clienteId: joao.id,
         equipamentoId: note.id,
         atendenteId: criados.ATENDENTE,
@@ -54,12 +63,14 @@ async function main() {
         historico: { create: { usuarioId: criados.ATENDENTE, para: "RECEBIDO", observacao: "Abertura da OS" } },
       },
     });
+    await prisma.empresa.update({ where: { id: empresaId }, data: { ultimoNumeroOS: 2 } });
   }
 
-  if ((await prisma.artigoConhecimento.count()) === 0) {
+  if ((await prisma.artigoConhecimento.count({ where: { empresaId } })) === 0) {
     await prisma.artigoConhecimento.createMany({
       data: [
         {
+          empresaId,
           titulo: "Celular não liga — roteiro inicial com fonte de bancada",
           tipoEquipamento: "CELULAR",
           sintoma: "não liga, sem imagem, sem vibração",
@@ -70,6 +81,7 @@ async function main() {
           tags: "nao liga, consumo, fonte de bancada, curto",
         },
         {
+          empresaId,
           titulo: "Notebook não carrega bateria",
           tipoEquipamento: "NOTEBOOK",
           sintoma: "não carrega bateria, só funciona na tomada",

@@ -1,10 +1,10 @@
 import { Router } from "express";
 import { z } from "zod";
 import { prisma } from "../lib/prisma";
-import { autorizar } from "../middlewares/auth";
+import { autorizar, usuarioAtual } from "../middlewares/auth";
 import { notFound, paginacao, parseId } from "../utils/http";
 
-/** RF03 — cadastro de clientes (HU02) */
+/** RF03 — cadastro de clientes (HU02), sempre dentro da empresa do usuário */
 export const clientesRoutes = Router();
 
 const soDigitos = (v: string) => v.replace(/\D/g, "");
@@ -23,17 +23,21 @@ const clienteSchema = z.object({
 });
 
 clientesRoutes.get("/", async (req, res) => {
+  const { empresaId } = usuarioAtual(req);
   const { skip, take, pagina, porPagina } = paginacao(req.query);
   const busca = typeof req.query.busca === "string" ? req.query.busca.trim() : "";
   const digitos = soDigitos(busca);
-  const where = busca
-    ? {
-        OR: [
-          { nome: { contains: busca } },
-          ...(digitos ? [{ cpf: { contains: digitos } }, { telefone: { contains: digitos } }] : []),
-        ],
-      }
-    : {};
+  const where = {
+    empresaId,
+    ...(busca
+      ? {
+          OR: [
+            { nome: { contains: busca } },
+            ...(digitos ? [{ cpf: { contains: digitos } }, { telefone: { contains: digitos } }] : []),
+          ],
+        }
+      : {}),
+  };
   const [total, dados] = await Promise.all([
     prisma.cliente.count({ where }),
     prisma.cliente.findMany({ where, skip, take, orderBy: { nome: "asc" } }),
@@ -42,11 +46,14 @@ clientesRoutes.get("/", async (req, res) => {
 });
 
 clientesRoutes.get("/:id", async (req, res) => {
-  const cliente = await prisma.cliente.findUnique({
-    where: { id: parseId(req.params.id) },
+  const cliente = await prisma.cliente.findFirst({
+    where: { id: parseId(req.params.id), empresaId: usuarioAtual(req).empresaId },
     include: {
       equipamentos: true,
-      ordens: { select: { id: true, status: true, createdAt: true, equipamentoId: true }, orderBy: { createdAt: "desc" } },
+      ordens: {
+        select: { id: true, numero: true, status: true, createdAt: true, equipamentoId: true },
+        orderBy: { createdAt: "desc" },
+      },
     },
   });
   if (!cliente) throw notFound("Cliente");
@@ -55,10 +62,15 @@ clientesRoutes.get("/:id", async (req, res) => {
 
 clientesRoutes.post("/", autorizar("ADMIN", "ATENDENTE"), async (req, res) => {
   const dados = clienteSchema.parse(req.body);
-  res.status(201).json(await prisma.cliente.create({ data: dados }));
+  res.status(201).json(await prisma.cliente.create({ data: { ...dados, empresaId: usuarioAtual(req).empresaId } }));
 });
 
 clientesRoutes.patch("/:id", autorizar("ADMIN", "ATENDENTE"), async (req, res) => {
   const dados = clienteSchema.partial().parse(req.body);
-  res.json(await prisma.cliente.update({ where: { id: parseId(req.params.id) }, data: dados }));
+  res.json(
+    await prisma.cliente.update({
+      where: { id: parseId(req.params.id), empresaId: usuarioAtual(req).empresaId },
+      data: dados,
+    }),
+  );
 });

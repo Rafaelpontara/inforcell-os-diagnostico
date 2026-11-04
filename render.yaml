@@ -1,0 +1,23 @@
+# Publicação no Render: um único serviço entrega a API e as telas.
+# O banco MySQL fica fora do Render; a DATABASE_URL é informada no painel.
+services:
+  - type: web
+    name: inforcell-os
+    runtime: node
+    plan: free
+    region: virginia
+    branch: feature/publicacao
+    buildCommand: cd backend && npm ci --include=dev && npx prisma generate && npm run build
+    startCommand: cd backend && npx prisma migrate deploy && npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: NODE_ENV
+        value: production
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: 8h
+      - key: DATABASE_URL
+        sync: false

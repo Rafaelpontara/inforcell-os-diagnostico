@@ -34,13 +34,13 @@ async function contextoDaOS(osId: number, sintoma: string): Promise<ContextoDiag
     historicoEquipamento: anteriores.map(
       (s) => `${s.concluidaEm?.toISOString().slice(0, 10)}: sintoma "${s.sintoma}" → ${s.diagnosticoFinal}`,
     ),
-    baseConhecimento: await buscarArtigosRelevantes(eq.tipo, eq.marca, eq.modelo, `${sintoma} ${os.defeitoRelatado}`),
+    baseConhecimento: await buscarArtigosRelevantes(os.empresaId, eq.tipo, eq.marca, eq.modelo, `${sintoma} ${os.defeitoRelatado}`),
   };
 }
 
 async function carregarSessao(id: number, u: UsuarioToken) {
-  const sessao = await prisma.sessaoDiagnostico.findUnique({
-    where: { id },
+  const sessao = await prisma.sessaoDiagnostico.findFirst({
+    where: { id, os: { empresaId: u.empresaId } },
     include: { os: { select: { id: true, tecnicoId: true, status: true } } },
   });
   if (!sessao) throw notFound("Sessão de diagnóstico");
@@ -132,6 +132,7 @@ diagnosticosRoutes.get("/diagnosticos/:id", soTecnico, async (req, res) => {
       mensagens: { orderBy: { id: "asc" } },
       medicoes: { orderBy: { id: "asc" } },
       tecnico: { select: { id: true, nome: true } },
+      os: { select: { numero: true } },
     },
   });
   res.json(completa);
@@ -209,6 +210,7 @@ diagnosticosRoutes.post("/diagnosticos/:id/concluir", soTecnico, async (req, res
       .join("\n");
     artigo = await prisma.artigoConhecimento.create({
       data: {
+        empresaId: u.empresaId,
         titulo: `${eq.marca} ${eq.modelo} — ${concluida.sintoma}`.slice(0, 160),
         tipoEquipamento: eq.tipo,
         marca: eq.marca,
